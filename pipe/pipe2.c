@@ -25,7 +25,7 @@ int main()
 
                 /* Send "string" through the output side of pipe */
                 write(filedes[1], string, (strlen(string)+1));
-                while(1);
+
                 exit(0);
         }
         else
