@@ -8,6 +8,24 @@
  * Written by : Hamdan Radaideh
 */
 
+/*
+    exec
+        l -> argument are sent in the command explicitly                        [ REQUIRED / unless using v]
+        v -> argument are sent in the command as array                          [ REQUIRED / unless using l]
+        p -> look local PATH , ( by default you should send Full File Path )    [ OPTIONAL ]
+        e -> array of pointers to environment arguments                         [ OPTIONAL ]
+    ex:
+        char *argv[] = { "ls", "-l", NULL };
+        execvp(argv[0], argv);
+
+        execl("/usr/bin/uname", "uname", "-r", NULL);
+
+        char *const envp[2] = {"VAR=VALUE", NULL};
+        execle("/u/userid/bin/newShell", "newShell", NULL, envp);
+
+        execlp("uname", "uname", "-r", NULL);
+*/
+
 // colors defenitions
 void red () {
   printf("\033[1;31m");
