@@ -12,18 +12,33 @@ struct msgbuf {
 
 void main(int argc, char* argv[])
 {
-    int queue_id;         
-    struct msgbuf msg;   
-    int msg_type;         
+    int queue_id;
+    struct msgbuf msg;
 
-    msg_type = atoi(argv[1]);
+    // initlize type with max - 1 ( 1 highest first )
+    int msg_type=1;
 
-    queue_id = msgget(123456, 0);
+    queue_id = msgget(KEY, 0);
 
-    if ( msgrcv(queue_id, &msg, 101, msg_type, 0) < 0) {
-	    printf("Error rec\n");
-	    exit(1);
+    while(1){
+
+
+        int rc = msgrcv(queue_id, &msg, 101, msg_type, IPC_NOWAIT) ;
+
+        if ( rc < 0) {
+            // this will be reached if there is no msgs left of the same type ( msg_type )
+            msg_type++;
+            if (msg_type > 10){
+                // got them all
+                exit(0);
+            }
+            // continue if there is no msgs left of this type and increase type
+            continue;
+        }
+
+        // print msg
+        printf("RECEVER : \t Reader '%d' read message: '%s'\n", msg_type, msg.mtext);
+
     }
 
-    printf("RECEVER : \t Reader '%d' read message: '%s'\n", msg_type, msg.mtext);
 }
