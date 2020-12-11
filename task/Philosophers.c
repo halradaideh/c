@@ -13,7 +13,7 @@
 #include <fcntl.h>
 #include <pthread.h>
 
-bool chopsticks[5]= { false };
+bool chopsticks_shared[5]= { false };
 
 bool think(int id, bool *chopsticks, sem_t *sem);
 
@@ -25,9 +25,9 @@ void main(int argc, char* argv[]) {
 
 
     int id;
-    #define SNAME "/mjyf"
-    int KEY = 42;
-    int SEGMENTSIZE = sizeof(chopsticks);
+    #define SNAME "/HamdanSem"
+    int KEY = 9009;
+    int SEGMENTSIZE = sizeof(chopsticks_shared);
 
     id = shmget(KEY, SEGMENTSIZE, IPC_CREAT | 0666);
 
@@ -37,7 +37,18 @@ void main(int argc, char* argv[]) {
     }
 
     // shared object in SHM between processes
-    chopsticks[5] = (bool *) shmat(id, NULL, 0);
+    bool *chopsticks = (bool *) shmat(id, NULL, 0);
+
+    if (chopsticks <= (bool * )(0)) {
+        printf("pline: shmat failed: ");
+        exit(2);
+    }
+
+//    printf("print\n");
+//    for (int i = 0 ; i < 5 ; i ++){
+//        printf("%d ",chopsticks[i]);
+//    }
+//    printf("\n");
 
      /* initialize semaphores */
 
@@ -46,15 +57,26 @@ void main(int argc, char* argv[]) {
         there is 5 chopsticks , so two philosophers can eat at the same time !
         but they can check one by one
     */
-    sem_t *sem = sem_open(SNAME, O_CREAT, 0644, 2);
+    sem_t *sem = sem_open(SNAME, O_CREAT, 0644, 1);
 
     /*
         sem_t *sem = sem_open(SNAME, 0); /* Open a preexisting semaphore.
         sem_post(sem);
         sem_wait(sem);
     */
-    int id1, id2, id3, id4, id0;
-    if (id0=fork()==0) {
+    if (fork()==0) {
+        //philosopher 0
+        int id = 0;
+        while(1){
+            if (think(id, chopsticks, sem)){
+                // CS
+                eat(chopsticks, id, sem);
+            }
+            sleep(rand() % 5);
+        }
+    }
+
+    if (fork()==0) {
         //philosopher 1
         int id = 1;
         while(1){
@@ -62,23 +84,11 @@ void main(int argc, char* argv[]) {
                 // CS
                 eat(chopsticks, id, sem);
             }
-            sleep(1);
-        }
-    }
-
-    if (id1=fork()==0) {
-        //philosopher 3
-        int id = 3;
-        while(1){
-            if (think(id, chopsticks, sem)){
-                // CS
-                eat(chopsticks, id, sem);
-            }
-            sleep(1);
+            sleep(rand() % 5);
 
         }
     }
-    if (id2=fork()==0) {
+    if (fork()==0) {
         //philosopher 2
         int id = 2;
         while(1){
@@ -86,11 +96,23 @@ void main(int argc, char* argv[]) {
                 // CS
                 eat(chopsticks, id, sem);
             }
-            sleep(1);
+            sleep(rand() % 5);
+        }
+    }
+
+    if (fork()==0) {
+        //philosopher 3
+        int id = 3;
+        while(1){
+            if (think(id, chopsticks, sem)){
+                // CS
+                eat(chopsticks, id, sem);
+            }
+            sleep(rand() % 5);
 
         }
     }
-    if (id3=fork()==0) {
+    if (fork()==0) {
         //philosopher 4
         int id = 4;
         while(1){
@@ -98,49 +120,32 @@ void main(int argc, char* argv[]) {
                 // CS
                 eat(chopsticks, id, sem);
             }
-            sleep(1);
+            sleep(rand() % 5);
 
         }
     }
-    if (id4=fork()==0) {
-        //philosopher 5
-        int id = 5;
-        while(1){
-            if (think(id, chopsticks, sem)){
-                // CS
-                eat(chopsticks, id, sem);
-            }
-            sleep(1);
 
-        }
-    }
-    int value = -1;
-    int prev = -100;
-    while(1)
-    {
-        usleep(1000);
-        prev = value;
-        sem_getvalue(sem, &value);
-        if (value != prev){
-            printf("*** eating now: %d ***\n", abs(value- 2));
-        }
-    }
+    while(1);
 }
 
 
 bool think(int id, bool *chopsticks, sem_t *sem){
-    sleep(rand() % 5 );
     // wait turn to check if he can eat
     sem_wait(sem);
 
-    // to match index
-    id -- ;
-
+//    for (int i = 0 ; i < 5 ; i ++){
+//        printf("%d ",chopsticks[i]);
+//    }
+    printf("\n");
     // if mine ( left ) and the next one ( right ) is available , take turn
-    if (chopsticks[id] == false && chopsticks[id % 5] == false ) {
+    if (chopsticks[id] == false && chopsticks[(id + 1) % 5] == false ) {
         chopsticks[id]      = true;
-        chopsticks[id % 5]  = true;
-
+        chopsticks[(id + 1) % 5]  = true;
+//        for (int i = 0 ; i < 5 ; i ++){
+//            printf("%d ",chopsticks[i]);
+//        }
+        printf("\n");
+        sem_post(sem);
         return true;
     }
     else
@@ -149,7 +154,7 @@ bool think(int id, bool *chopsticks, sem_t *sem){
 
         // let another try
         sem_post(sem);
-        sleep(1);
+        sleep(rand() % 5);
         return false;
     }
 
@@ -158,13 +163,15 @@ bool think(int id, bool *chopsticks, sem_t *sem){
 void eat(bool *chopsticks, int id, sem_t *sem){
 
     printf("Philosopher %d : I am eating ! \n", id);
-    sleep(rand() % 2);
-    
-    printf("\tPhilosopher %d : Finished eating ! \n", id);
 
-    id --;
+    sleep(rand() % 20);
+    sem_wait(sem);
     chopsticks[id]      = false;
-    chopsticks[id % 5]  = false;
+    chopsticks[(id + 1) % 5]  = false;
+    printf("Philosopher %d :Finished ! \n", id);
     sem_post(sem);
+
+    sleep(rand() % 10);
+
 
 }
