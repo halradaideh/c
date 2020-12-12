@@ -13,20 +13,22 @@
 #include <fcntl.h>
 #include <pthread.h>
 
-bool chopsticks_shared[5]= { false };
-
 bool think(int id, bool *chopsticks, sem_t *sem);
 
 void eat(bool *chopsticks, int id, sem_t *sem);
 
+void cleaner();
+
+int id;
+#define SNAME "/HamdanSem1"
+bool chopsticks_shared[5]= { false };
+int KEY = 90109;
+sem_t *sem;
+bool *chopsticks;
+
+int pid0, pid1, pid2, pid3, pid4  = -1;
 
 void main(int argc, char* argv[]) {
-
-
-
-    int id;
-    #define SNAME "/HamdanSem"
-    int KEY = 9009;
     int SEGMENTSIZE = sizeof(chopsticks_shared);
 
     id = shmget(KEY, SEGMENTSIZE, IPC_CREAT | 0666);
@@ -37,7 +39,7 @@ void main(int argc, char* argv[]) {
     }
 
     // shared object in SHM between processes
-    bool *chopsticks = (bool *) shmat(id, NULL, 0);
+    chopsticks = (bool *) shmat(id, NULL, 0);
 
     if (chopsticks <= (bool * )(0)) {
         printf("pline: shmat failed: ");
@@ -57,14 +59,21 @@ void main(int argc, char* argv[]) {
         there is 5 chopsticks , so two philosophers can eat at the same time !
         but they can check one by one
     */
-    sem_t *sem = sem_open(SNAME, O_CREAT, 0644, 1);
+    sem = sem_open(SNAME, O_CREAT, 0644, 1);
 
     /*
         sem_t *sem = sem_open(SNAME, 0); /* Open a preexisting semaphore.
         sem_post(sem);
         sem_wait(sem);
     */
-    if (fork()==0) {
+
+    pid0=fork();
+    pid1=fork();
+    pid2=fork();
+    pid3=fork();
+    pid4=fork();
+
+    if ( pid0 == 0 && pid1 != 0 && pid2 != 0 && pid3 != 0 && pid4 != 0 ) {
         //philosopher 0
         int id = 0;
         while(1){
@@ -75,8 +84,7 @@ void main(int argc, char* argv[]) {
             sleep(rand() % 5);
         }
     }
-
-    if (fork()==0) {
+    if (pid0 != 0 && pid1 == 0 && pid2 != 0 && pid3 != 0 && pid4 != 0) {
         //philosopher 1
         int id = 1;
         while(1){
@@ -88,7 +96,7 @@ void main(int argc, char* argv[]) {
 
         }
     }
-    if (fork()==0) {
+    if (pid0 != 0 && pid1 != 0 && pid2 == 0 && pid3 != 0 && pid4 != 0) {
         //philosopher 2
         int id = 2;
         while(1){
@@ -99,8 +107,7 @@ void main(int argc, char* argv[]) {
             sleep(rand() % 5);
         }
     }
-
-    if (fork()==0) {
+    if (pid0 != 0 && pid1 != 0 && pid2 != 0 && pid3 == 0 && pid4 != 0) {
         //philosopher 3
         int id = 3;
         while(1){
@@ -112,7 +119,7 @@ void main(int argc, char* argv[]) {
 
         }
     }
-    if (fork()==0) {
+    if (pid0 != 0 && pid1 != 0 && pid2 != 0 && pid3 != 0 && pid4 == 0) {
         //philosopher 4
         int id = 4;
         while(1){
@@ -124,7 +131,10 @@ void main(int argc, char* argv[]) {
 
         }
     }
-
+    if (pid0 != 0 && pid1 != 0 && pid2 != 0 && pid3 != 0 && pid4 != 0)
+    {
+        signal(SIGINT, cleaner);
+    }
     while(1);
 }
 
@@ -173,5 +183,46 @@ void eat(bool *chopsticks, int id, sem_t *sem){
 
     sleep(rand() % 10);
 
+}
+
+void cleaner(){
+    // kill children
+    printf("\n[-] Kill Children \n");
+    printf("%d\n",pid0);
+    kill(pid0,SIGKILL);
+    printf("%d\n",pid1);
+    kill(pid1,SIGKILL);
+    printf("%d\n",pid2);
+    kill(pid2,SIGKILL);
+    printf("%d\n",pid3);
+    kill(pid3,SIGKILL);
+    printf("%d\n",pid4);
+    kill(pid4,SIGKILL);
+
+    // reset SHM
+    printf("[-] reset SHM \n");
+    for(int i = 0 ; i < 5 ; i++){
+        chopsticks[i] = false;
+    }
+
+    // reset Sem
+    printf("[-] reset Sem \n");
+    int value = -1;
+    sem_getvalue(sem, &value);
+    printf("Current Sem value %d\n", value);
+    while(value != 1){
+        if(value > 1){
+            sem_wait(sem);
+        }
+        else{
+            sem_post(sem);
+        }
+        sem_getvalue(sem, &value);
+    }
+    printf("New Sem value %d\n", value);
+
+    // exit
+    printf("[-] Exit with status code 0 \n");
+    exit(0);
 
 }
