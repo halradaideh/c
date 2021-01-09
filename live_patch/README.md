@@ -7,3 +7,5 @@ requirements:
 * i386 based CPU
 * IDE based storage ( sata is not supported at that time )
 * Page-Address Extensions Disabled ( to use legacy paging mode, can be done using Virtual Box )
+
+source : https://www.cs.usfca.edu/~cruse/cs635/

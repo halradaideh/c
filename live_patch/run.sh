@@ -12,6 +12,8 @@ sleep 1
 echo "searching for table address .."
 sleep 1
 
+c028863cvi
+
 sys_call_table_address=$(cat /boot/System.map-$(uname -r) | grep sys_call | awk '{print $1}')
 echo "System Call Table Address is : ${sys_call_table_address}"
 sleep 5
