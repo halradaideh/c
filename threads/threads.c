@@ -19,7 +19,8 @@ void* func(void* arg)
     pthread_exit(NULL);
 }
 
-void fun()
+
+int main()
 {
     pthread_t ptid;
 
@@ -30,18 +31,11 @@ void fun()
 
     sleep(1);
 
-    exit(0);
     // Waiting for the created thread to terminate
     pthread_join(ptid, NULL);
 
     printf("MASTER after \n");
 
     pthread_exit(NULL);
-}
-
-// Driver code
-int main()
-{
-    fun();
     return 0;
 }

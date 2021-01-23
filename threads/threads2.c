@@ -32,6 +32,8 @@ void *thread_function(void *dummyPtr)
 {
    printf("Thread number %ld\n", pthread_self());
    pthread_mutex_lock( &mutex1 );
+   // CS
    counter++;
+   // END OF CS
    pthread_mutex_unlock( &mutex1 );
 }
