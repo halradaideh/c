@@ -14,7 +14,7 @@ void main(int argc, char* argv[]) {
     int id;
     int KEY = 1243;
     int SEGMENTSIZE = sizeof(info);
-    id = shmget(KEY, SEGMENTSIZE * 5, IPC_CREAT | 0666);
+    id = shmget(KEY, SEGMENTSIZE * 5, 0);
 
     if (id < 0) {
         printf("pline: shmget fdailed: ");

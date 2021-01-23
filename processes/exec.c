@@ -9,7 +9,7 @@
 */
 
 /*
-    exec
+    exec [l/v] [p/e]
         l -> argument are sent in the command explicitly                        [ REQUIRED / unless using v]
         v -> argument are sent in the command as array                          [ REQUIRED / unless using l]
         p -> look local PATH , ( by default you should send Full File Path )    [ OPTIONAL ]
