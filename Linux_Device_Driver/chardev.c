@@ -9,6 +9,8 @@
  * output to see the assigned device number and command to create a device file.
  *
  * From TLDP.org's LKMPG book.
+ *
+ * Modified by Hamdan A. Radaideh
  */
 
 #include <linux/kernel.h>
@@ -41,6 +43,8 @@ static int Device_Open = 0;
 static char msg[BUF_LEN];
 static char *msg_Ptr;
 
+static int counter = 0;
+
 static struct file_operations fops = {
   .read = device_read,
   .write = device_write,
@@ -53,6 +57,7 @@ static struct file_operations fops = {
  */
 int init_module(void)
 {
+  printk(KERN_WARNING "\n ## INSTALLING CDD ## \n");
   Major = register_chrdev(0, DEVICE_NAME, &fops);
 
   if (Major < 0) {
@@ -75,6 +80,7 @@ int init_module(void)
  */
 void cleanup_module(void)
 {
+  printk(KERN_WARNING "\n ## REMOVING CDD ## \n");
   /*
    * Unregister the device
    */
@@ -91,11 +97,10 @@ void cleanup_module(void)
  */
 static int device_open(struct inode *inode, struct file *filp)
 {
-  static int counter = 0;
 
   if (Device_Open)
     return -EBUSY;
-
+  printk("\n");
   Device_Open++;
   sprintf(msg, "I already told you %d times Hello world!\n", counter++);
   msg_Ptr = msg;
@@ -166,10 +171,38 @@ static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
 }
 
 /*
- * Called when a process writes to dev file: echo "hi" > /dev/hello
+ * Called when a process writes to dev file: echo "102" > /dev/hello
  */
 static ssize_t device_write(struct file *filp, const char *buf, size_t len, loff_t *off)
 {
-  printk(KERN_ALERT "Sorry, this operation isn't supported.\n");
-  return -EINVAL;
+    size_t maxdatalen = 30;
+    uint8_t databuf[maxdatalen];
+    int rc, ncopied;
+    long myLong;
+
+    if (len < maxdatalen) {
+        maxdatalen = len;
+    }
+
+    ncopied = copy_from_user(databuf, buf, maxdatalen);
+
+    if (ncopied == 0) {
+        printk("Copied %zd bytes from the user\n", maxdatalen);
+    } else {
+        printk(KERN_ALERT "Could't copy %d bytes from the user\n", ncopied);
+        return -EINVAL;
+    }
+
+    databuf[maxdatalen] = 0;
+    printk("Data from the user: %s", databuf);
+
+    rc = kstrtol(databuf, 10 ,&myLong);
+    if (rc != 0) {
+      printk(KERN_ALERT "Sorry, you can't pass anything rather than integer.\n");
+      return -EINVAL;
+    }
+    printk("Data from the user as integer: %ld\n", myLong);
+
+    counter = (int) myLong;
+    return len;
 }
