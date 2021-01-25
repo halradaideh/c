@@ -139,6 +139,21 @@ static ssize_t device_read(struct file *filp, /* see include/linux/fs.h   */
                            size_t length,     /* length of the buffer     */
                            loff_t *offset)
 {
+
+//    uint8_t *data = "Hello from the kernel world!\n";
+//    size_t datalen = strlen(data);
+//
+//
+//    if (count > datalen) {
+//        count = datalen;
+//    }
+//
+//    if (copy_to_user(buf, data, count)) {
+//        return -EFAULT;
+//    }
+//
+//    return count;
+
   /*
    * Number of bytes actually written to the buffer
    */
