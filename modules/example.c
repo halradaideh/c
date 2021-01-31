@@ -18,4 +18,4 @@ static void __exit hello_cleanup(void)
 }
 
 module_init(hello_init);
-module_exit(hello_cleanup);
+module_init(hello_cleanup);

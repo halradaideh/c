@@ -1,0 +1,8 @@
+1. true
+2. false, if the module was defined on compiling time, it will be loaded on boot, so no need to load it manually
+3. false, only one process can execute the CS ata time
+4. false, each thread has it's own PC
+5. false, the opposite
+6. false, the move the process to waiting queue to reduce busy waiting
+7. false, we communicate with the shared memory using system call, the kernel handles the kernel mode code
+8. true

@@ -1,0 +1,9 @@
+a.
+   Enter Ctrl+c Within 5 Seconds To Generate Signal
+
+   I Am In The Signal Handler Function
+
+b.
+   Enter Ctrl+c Within 5 Seconds To Generate Signal
+
+   You Have Not Pressed Ctrl-c!!!

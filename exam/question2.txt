@@ -1,0 +1,4 @@
+1. false, the default action for SIGKILL is the termination, so no need to override it with a function func
+2. false, the process don't know when the signal is received, it is Async
+3. true
+4. false, pthread_detach() will make the process as a daemon, thus it will not wait for it
